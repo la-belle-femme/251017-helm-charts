@@ -1,0 +1,11 @@
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - kubecost.internal.wft.com # Replace with the actual domain
+  tls:
+    - hosts:
+        - kubecost.internal.wft.comn # Replace with the actual domain
+      secretName: kubecost-tls

@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: test-alert
+  namespace: monitoring
+  labels:
+    release: prom-stack
+spec:
+  groups:
+    - name: test-group
+      rules:
+        - alert: TestAlertAlwaysOn
+          expr: vector(1)
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Test alert (always firing)"
+            description: "This is a test alert to verify notifications."

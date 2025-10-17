@@ -1,0 +1,22 @@
+{{- $global := .Values.global }}
+{{- if and (kindIs "map" $global) (hasKey $global "namespace") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kyverno
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app.kubernetes.io/name: kyverno
+    app.kubernetes.io/instance: kyverno
+data:
+  config.yaml: |
+    resourceFilters:
+    {{- range .Values.admissionController.resourceFilters }}
+      - {{ . }}
+    {{- end }}
+    webhooks:
+      mutation:
+        enable: {{ .Values.admissionController.mutation.enabled | default true }}
+      validation:
+        failurePolicy: {{ .Values.admissionController.validation.failurePolicy | default "Ignore" }}
+{{- end }}

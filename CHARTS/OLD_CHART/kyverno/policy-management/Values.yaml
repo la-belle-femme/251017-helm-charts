@@ -1,0 +1,5 @@
+# You can leave this empty or use it to toggle individual policies
+enabled:
+  blockLatest: true
+  requireLabels: true
+  readonlyRootFs: true

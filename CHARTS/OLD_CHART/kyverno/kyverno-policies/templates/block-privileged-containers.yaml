@@ -1,0 +1,21 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-privileged-containers
+spec:
+  validationFailureAction: {{ .Values.disallowPrivilegedContainers.validationFailureAction | quote }}
+  rules:
+    - name: validate-privileged
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        {{- with index .Values.disallowPrivilegedContainers.rules 0 }}
+        message: {{ .validate.message | quote }}
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: "false"
+        {{- end }}

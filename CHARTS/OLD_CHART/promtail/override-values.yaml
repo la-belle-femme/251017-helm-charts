@@ -1,0 +1,97 @@
+namespaceOverride: logging 
+rbac:
+  create: true
+  serviceAccount:
+    create: true
+    name: promtail-sa
+  role:
+    create: true
+    name: promtail-read-logs
+    rules:
+      - apiGroups: [""]
+        resources: ["pods", "pods/log"]
+        verbs: ["get", "list"]
+  roleBinding:
+    create: true
+    name: promtail-read-logs-binding
+    subjects:
+      - kind: ServiceAccount
+        name: promtail-sa
+        namespace: logging
+    roleRef:
+      kind: Role
+      name: promtail-read-logs
+      apiGroup: rbac.authorization.k8s.io
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "128Mi"
+  limits:
+    cpu: "200m"
+    memory: "512Mi"
+
+config:
+  server:
+    log_level: debug  # Use 'warn' or 'error' in production
+    log_format: json
+  clients:
+    - url: "http://loki-gateway.logging.svc.cluster.local/loki/api/v1/push"
+      tenant_id: "1"
+      # 🔐 Optional TLS support (uncomment and mount certs if needed)
+      # tls_config:
+      #   ca_file: /etc/promtail/certs/ca.crt
+      #   cert_file: /etc/promtail/certs/tls.crt
+      #   key_file: /etc/promtail/certs/tls.key
+      #   insecure_skip_verify: false
+
+  scrape_configs:
+    - job_name: varlogs
+      static_configs:
+        - targets:
+            - localhost
+          labels:
+            job: varlogs
+            __path__: /var/log/**.log
+      pipeline_stages:
+        - docker: {}
+
+    - job_name: kubernetes-pods
+      kubernetes_sd_configs:
+        - role: pod
+      relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace]
+          target_label: namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          target_label: pod
+        - source_labels: [__meta_kubernetes_pod_container_name]
+          target_label: container
+        - source_labels: [__meta_kubernetes_pod_node_name]
+          target_label: node
+        - action: keep
+          regex: true  # Ensures pods are scraped by default
+persistence:
+  enabled: false  # In-memory storage for better performance in autoscaling environments
+
+securityContext:
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 0
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
+livenessProbe:
+  httpGet:
+    path: /ready
+    port: 3101
+  initialDelaySeconds: 10
+  timeoutSeconds: 2
+  failureThreshold: 5
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 3101
+  initialDelaySeconds: 5
+  timeoutSeconds: 1
+  failureThreshold: 3

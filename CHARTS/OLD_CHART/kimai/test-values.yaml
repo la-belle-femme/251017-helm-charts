@@ -1,0 +1,18 @@
+ingress:
+  hosts:
+    - host: kimai-test.local
+      paths:
+        - path: /
+          pathType: Prefix
+kimai:
+  appEnv: "test"
+  admin:
+    email: test-admin@example.com
+    password: TestPass123!
+    username: testadmin
+ingress:
+  hosts:
+    - host: kimai-test.local
+      paths:
+        - path: /
+          pathType: Prefix

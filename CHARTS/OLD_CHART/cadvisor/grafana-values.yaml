@@ -1,0 +1,11 @@
+persistence:
+  enabled: true
+  storageClassName: "standard"   # Or "" for default
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+
+adminUser: admin
+adminPassword: admin123  # Or use a Kubernetes secret instead
+
+

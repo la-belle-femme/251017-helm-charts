@@ -1,0 +1,6 @@
+Loki is deployed!
+
+To access:
+  kubectl port-forward svc/{{ include "loki.fullname" . }} 3100:3100 -n loki
+
+Then visit: http://localhost:3100/ready

@@ -1,0 +1,17 @@
+image:
+  repository: gcr.io/cadvisor/cadvisor
+  tag: v0.47.2
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+prometheus:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"

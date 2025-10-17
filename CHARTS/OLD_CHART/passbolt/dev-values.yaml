@@ -1,0 +1,168 @@
+# Development environment values for Passbolt
+nameOverride: "passbolt-dev"
+
+# Single replica for development to conserve resources
+replicaCount: 1
+
+# Development image configuration with latest tag for testing new features
+image:
+  repository: passbolt/passbolt
+  pullPolicy: Always
+  tag: "latest-pro-non-root"
+
+# Development service configuration
+service:
+  name: passbolt-dev-service
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Enable ingress for local development access
+ingress:
+  enabled: true
+  name: passbolt-dev-ingress
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+  hosts:
+    - host: passbolt.dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Minimal resources for development environment
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Shorter probe times for development
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 5
+readinessProbe:
+  httpGet:
+    path: /healthz/status
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  failureThreshold: 3
+
+# Development persistence with small size
+persistence:
+  enabled: true
+  name: passbolt-dev-pvc
+  storageClass: "standard"
+  acceesMode: ReadWriteOnce
+  size: 500Mi
+
+# Disable autoscaling for development
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+
+# Development database configuration
+database:
+  host: "mariadb-dev"
+  port: 3306
+  user: "passbolt_dev"
+  password: "devpassword"  # In real scenario, use secrets or external secret management
+  name: "passbolt_dev"
+  existingSecret: ""
+
+# Development LDAP setup - simplified for dev
+ldap:
+  enabled: false  # Disabled for simpler development setup
+  host: "ldap.dev.local"
+  port: 389
+  useStartTLS: false  # Disabled for ease of development
+  baseDN: "dc=dev,dc=local"
+  userDN: "ou=users,dc=dev,dc=local"
+  bind:
+    dn: "cn=admin,dc=dev,dc=local"
+    password: "devldappassword"  # In real scenario, use secrets
+  existingSecret: ""
+  filter: "(&(objectClass=person)(|(uid=%s)(mail=%s)))"
+  attrEmail: "mail"
+  attrFirstname: "givenName"
+  attrLastname: "sn"
+  attrUsername: "uid"
+
+# Development encryption setup - auto-generate for dev ease
+encryption:
+  gpg:
+    existingSecret: ""
+    autoGenerate: true
+  jwt:
+    existingSecret: ""
+    autoGenerate: true
+
+# Development application configuration
+app:
+  fullBaseUrl: "http://passbolt.dev.local"
+  serverName: "Passbolt DEV"
+  registrationPublic: true  # Allow public registration in dev for testing
+  emailTransport: "smtp"
+  emailFromAddress: "passbolt-dev@example.com"
+  emailFromName: "Passbolt DEV"
+  emailNotificationsSender: "passbolt-dev@example.com"
+  smtpHost: "mailhog.dev.local"  # Common dev mail testing tool
+  smtpPort: 1025  # Common mailhog port
+  smtpTLS: false  # Often disabled in dev for simplicity
+  smtpUsername: ""
+  smtpPassword: ""
+  existingSmtpSecret: ""
+
+# Additional dev tools and debug volumes
+volumes:
+  - name: dev-tools
+    emptyDir: {}
+
+volumeMounts:
+  - name: dev-tools
+    mountPath: "/var/www/passbolt/tmp/debug"
+
+nodeSelector:
+  environment: dev
+
+# Disable network policies in development for easier connectivity
+networkPolicy:
+  enabled: false
+
+# Enable RBAC with additional permissions for development
+rbac:
+  create: true
+  name: passbolt-dev-rbac
+  binding:
+    name: passbolt-dev-binding
+  rules:
+    - apiGroups: [""]
+      resources: ["secrets", "configmaps", "pods", "pods/log"]
+      verbs: ["get", "list", "watch"]
+
+# Enable monitoring for development testing
+monitoring:
+  podMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 5s
+    path: /healthz
+    port: http
+
+# Add dev-specific pod annotations for debugging
+podAnnotations:
+  dev.environment: "true"
+  dev.debug: "enabled"
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/healthz"
+  prometheus.io/port: "80"

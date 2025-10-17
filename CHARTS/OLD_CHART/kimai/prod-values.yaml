@@ -1,0 +1,33 @@
+ingress:
+  hosts:
+    - host: kimai.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kimai-tls
+      hosts:
+        - kimai.example.com
+kimai:
+  appEnv: "prod"
+  admin:
+    email: prod-admin@example.com
+    password: StrongProdPass123!
+    username: prodadmin
+ingress:
+  hosts:
+    - host: kimai.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kimai-tls
+      hosts:
+        - kimai.example.com
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "2"
+    memory: "2Gi"

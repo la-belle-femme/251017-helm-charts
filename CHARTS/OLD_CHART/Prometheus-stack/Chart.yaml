@@ -1,0 +1,30 @@
+apiVersion: v2
+name: prom-stack
+#
+# Helm chart for deploying a complete Prometheus monitoring stack.  This chart
+# does not include any application specific manifests itself; instead it
+# declares a dependency on the upstream `kube‑prometheus‑stack` chart and
+# supplies an opinionated set of overrides via `values-override.yaml`.  A
+# pinned chart version is used so that upgrades are deterministic and repeatable.
+#
+# See the README or accompanying documentation for instructions on how to
+# install this chart, validate it with `helm lint`, and render templates with
+# `helm template`.
+#
+description: |-
+  Custom Helm chart to deploy a complete Prometheus monitoring stack based on
+  the prometheus-community/kube-prometheus-stack chart.  The dependency
+  provides all of the core components (Prometheus, Alertmanager, Grafana,
+  Node Exporter and kube-state-metrics); this chart simply wraps it with
+  additional alerting rules, Grafana dashboards and an alert routing setup
+  for Mattermost and email.
+
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: "76.4.0"  # pinned version as of August 2025【483711648355575†L33-L41】
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: kube-prometheus-stack.enabled

@@ -1,0 +1,73 @@
+replicaCount: 2
+
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+      http {
+        port => 8080
+      }
+    }
+
+    filter {
+      json { source => "message" }
+      mutate { rename => { "host" => "source_host" } }
+      # Optional grok/date for production logs
+      # grok { match => { "message" => "%{COMBINEDAPACHELOG}" } }
+      # date { match => ["timestamp", "ISO8601"] }
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["https://elasticsearch-master:9200"]
+        index => "logstash-%{+YYYY.MM.dd}"
+        user => "${ELASTIC_USER}"
+        password => "${ELASTIC_PASSWORD}"
+        ssl => true
+        cacert => "/usr/share/logstash/config/certs/ca.crt"
+      }
+      prometheus {
+        host => "0.0.0.0"
+        port => 9800
+      }
+    }
+
+envFrom:
+  - secretRef:
+      name: logstash-secrets
+
+resources:
+  requests:
+    memory: 1Gi
+    cpu: 500m
+  limits:
+    memory: 2Gi
+    cpu: 1000m
+
+javaOpts: "-Xms1g -Xmx1g"
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+volumeMounts:
+  - name: certs
+    mountPath: /usr/share/logstash/config/certs
+    readOnly: true
+
+volumes:
+  - name: certs
+    secret:
+      secretName: logstash-certs
+
+service:
+  ports:
+    - name: beats
+      port: 5044
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 9800

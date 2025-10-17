@@ -1,0 +1,23 @@
+{{- /*
+  Service placeholder.  The prom-stack chart does not expose any additional
+  endpoints beyond those provided by the kube-prometheus-stack.  Use this
+  template if you need to expose custom services for additional components.
+*/ -}}
+
+{{- if false }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "prom-stack.fullname" . }}
+  labels:
+    {{- include "prom-stack.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "prom-stack.labels" . | nindent 4 }}
+{{- end }}

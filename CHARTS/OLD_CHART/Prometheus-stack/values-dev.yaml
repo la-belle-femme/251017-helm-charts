@@ -1,0 +1,207 @@
+#
+# Dev environment overrides for the `kube‑prometheus‑stack` dependency.
+#
+# These settings enable all of the core components (Prometheus, Alertmanager,
+# Grafana, Node Exporter and kube-state-metrics), configure alert routing to
+# Mattermost and SMTP, provision a simple dashboard and datasources in Grafana,
+# and define custom recording and alerting rules.  Port numbers, webhook
+# endpoints and SMTP credentials are taken from the provided snippet.
+
+kube-prometheus-stack:
+  # Install CRDs for PrometheusRule and ServiceMonitor【553677577333195†L31-L35】.
+  crds:
+    enabled: true
+
+  prometheus:
+    enabled: true
+    service:
+      port: 9090
+      targetPort: 9090
+
+  alertmanager:
+    enabled: true
+    service:
+      port: 9093
+      targetPort: 9093
+    # Custom Alertmanager configuration.  This map extends the default
+    # configuration shipped with the kube-prometheus-stack chart by adding
+    # receivers for Mattermost and email.  It also preserves the default
+    # inhibit rules and template files.  Without including inhibit_rules
+    # and templates the chart may fail to render properly.
+    config:
+      global:
+        resolve_timeout: 5m
+        smtp_smarthost: smtp.mailgun.org:587
+        smtp_from: connect-dev@linkafrica.org
+        smtp_auth_username: connect-dev@linkafrica.org
+        apiKey: "${MAILGUN_API_KEY}"        smtp_require_tls: true
+      route:
+        group_by:
+          - namespace
+          - alertname
+          - severity
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 12h
+        receiver: mattermost-and-email
+        routes:
+          - matchers:
+              - alertname="Watchdog"
+            receiver: mattermost-and-email
+      inhibit_rules:
+        - source_matchers:
+            - severity="critical"
+          target_matchers:
+            - severity=~"warning|info"
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - severity="warning"
+          target_matchers:
+            - severity="info"
+          equal:
+            - namespace
+            - alertname
+        - source_matchers:
+            - alertname="InfoInhibitor"
+          target_matchers:
+            - severity="info"
+          equal:
+            - namespace
+      receivers:
+        - name: mattermost-and-email
+          webhook_configs:
+            - url: https://mattermost.edusc.us/hooks/93wdijzsspd7fc55gy8f8mhpcc
+              send_resolved: true
+          email_configs:
+            - to: engineering@edusuc.net
+              send_resolved: true
+      templates:
+        - /etc/alertmanager/config/*.tmpl
+
+  grafana:
+    enabled: true
+    service:
+      port: 3000
+    adminUser: admin
+    adminPassword: admin
+    sidecar:
+      datasources:
+        enabled: true
+        defaultDatasourceEnabled: false
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        labelValue: "1"
+    # Configure the Prometheus datasource.  Note that the service name
+    # created by the kube‑prometheus‑stack sub‑chart does *not* contain
+    # the string "stack" twice (the service is
+    # prom-stack-kube-prometheus-prometheus), so the URL must reflect
+    # that exact service name.  Incorrect values here will cause
+    # Grafana panels to show "no data".
+    additionalDataSources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        # Use the operator-created service `prometheus-operated` for reliability.
+        # This headless service always points to the active Prometheus pods
+        # regardless of the release name or chart internals.
+        url: http://prometheus-operated:9090
+        isDefault: true
+        jsonData:
+          timeInterval: "30s"
+        version: 1
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: custom
+            orgId: 1
+            folder: 'Custom Dashboards'
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/custom
+    dashboards:
+      custom:
+        node-resources:
+          json: |
+            {
+              "schemaVersion": 30,
+              "title": "Node Resource Dashboard",
+              "uid": "node-resources-dashboard",
+              "time": { "from": "now-1h", "to": "now" },
+              "panels": [
+                {
+                  "type": "timeseries",
+                  "title": "CPU utilisation by node",
+                  "datasource": "Prometheus",
+                  "targets": [
+                    {
+                      "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+                      "legendFormat": "{{ '{{' }} instance {{ '}}' }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "timeseries",
+                  "title": "Memory utilisation by node",
+                  "datasource": "Prometheus",
+                  "targets": [
+                    {
+                      "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
+                      "legendFormat": "{{ '{{' }} instance {{ '}}' }}"
+                    }
+                  ]
+                }
+              ]
+            }
+
+  kubeStateMetrics:
+    enabled: true
+  nodeExporter:
+    enabled: true
+    service:
+      port: 9100
+
+  additionalPrometheusRulesMap:
+    custom-rules:
+      groups:
+        - name: custom-recording
+          rules:
+            - record: cluster:node_cpu:avg_rate5m
+              expr: avg(rate(node_cpu_seconds_total{mode!="idle"}[5m])) by (instance)
+        - name: custom-alerts
+          rules:
+            - alert: HighNodeCPUUsage
+              expr: avg(rate(node_cpu_seconds_total{mode!="idle"}[5m])) by (instance) > 0.85
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "High CPU usage detected on node {{ '{{' }} $labels.instance {{ '}}' }}"
+                description: "CPU usage on node {{ '{{' }} $labels.instance {{ '}}' }} has been above 85% for more than 5 minutes."
+            - alert: HighNodeMemoryUsage
+              expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+              for: 5m
+              labels:
+                severity: critical
+              annotations:
+                summary: "High memory utilisation detected on node {{ '{{' }} $labels.instance {{ '}}' }}"
+                description: "Memory utilisation on node {{ '{{' }} $labels.instance {{ '}}' }} has been above 85% for more than 5 minutes."
+
+  # Explicitly enable scrapers for all kube components【553677577333195†L3812-L3993】.
+  kubeApiServer:
+    enabled: true
+  kubelet:
+    enabled: true
+  kubeControllerManager:
+    enabled: true
+  kubeScheduler:
+    enabled: true
+  coreDns:
+    enabled: true
+  kubeProxy:
+    enabled: true

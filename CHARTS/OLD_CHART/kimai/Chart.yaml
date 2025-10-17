@@ -1,0 +1,15 @@
+apiVersion: v2
+name: timesheet-report-kimai
+description: Kimai Timesheet with report generation, user role management, and StatefulSet
+type: application
+version: 0.2.0
+appVersion: "2.x"
+
+dependencies:
+  - name: mariadb
+    version: 18.0.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: mariadb.enabled
+
+# If you want to use an external database, set mariadb.enabled: false in your values file.
+# Then run 'helm dependency update' to ensure the charts/ directory is correct.

@@ -1,0 +1,4 @@
+commonLabels:
+  app: sonarqube
+  env: production
+  team: devops

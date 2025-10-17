@@ -1,0 +1,30 @@
+replicaCount: 3
+persistence:
+  enabled: false
+  size: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: "STORAGECLASS"
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "1Gi"
+    cpu: "500m"
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: alertmanager.prod.company.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: alertmanager-tls
+      hosts:
+        - alertmanager.prod.company.com
+
+mattermostWebhookUrl: "MMWEBHOOK_URL"

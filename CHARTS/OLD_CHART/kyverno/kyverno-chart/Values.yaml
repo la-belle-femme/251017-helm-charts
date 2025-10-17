@@ -1,0 +1,93 @@
+# ================================
+# 🌐 Global Configuration (Reusable)
+# ================================
+global:
+  image:
+    repository: ghcr.io/kyverno/kyverno
+    tag: "v1.11.2"
+    pullPolicy: IfNotPresent
+
+  replicaCount: 3
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  priorityClassName: system-cluster-critical
+
+  serviceAccount:
+    name: kyverno
+
+  namespace: kyverno
+
+  prometheus:
+    releaseLabel: prometheus  # Ensure this label is being used in your templates
+
+# ================================
+# 🔒 Admission Controller
+# ================================
+admissionController:
+  enabled: true
+  timeoutSeconds: 10
+  mutation:
+    enabled: true
+  validation:
+    failurePolicy: Enforce
+  resourceFilters:
+    - "[Event,*,*]"
+    - "[*,kube-system,*]"
+    - "[*,kube-public,*]"
+    - "[*,kyverno,*]"
+    - "[Binding,*,*]"
+    - "[ReplicaSet,*,*]"
+
+  # Ensure rbac is properly structured
+  rbac:
+    create: true
+    serviceAccount:
+      annotations: {}  # Empty map ensures valid YAML structure
+
+# ================================
+# 📊 Observability & Metrics
+# ================================
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      release: prometheus
+
+generateSuccessEvents: true
+
+# ================================
+# 🧪 Reporting & Background Audit
+# ================================
+backgroundProcessing: true
+
+webhooksCleanup:
+  enabled: true
+  autoDeleteWebhooks:
+    enabled: true  # Ensuring this key exists to prevent nil reference errors
+
+reportsController:
+  enabled: true
+
+customReports:
+  enabled: true
+
+# ================================
+# 🛡️ Pod Security Standards
+# ================================
+podSecurityStandard:
+  enabled: true
+
+# ================================
+# ⚙️ Scheduling Settings
+# ================================
+nodeSelector: {}
+tolerations: []
+affinity: {}

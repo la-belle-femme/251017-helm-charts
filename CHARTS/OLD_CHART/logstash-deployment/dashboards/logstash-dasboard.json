@@ -1,0 +1,177 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard",
+        "name": "Annotations & Alerts",
+        "enable": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "hide": true
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1658918390504,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(logstash_pipeline_events_in_total[1m])",
+          "legendFormat": "Events In",
+          "refId": "A"
+        }
+      ],
+      "title": "Logstash Events In (per second)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(logstash_pipeline_events_out_total[1m])",
+          "legendFormat": "Events Out",
+          "refId": "A"
+        }
+      ],
+      "title": "Logstash Events Out (per second)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "logstash_jvm_memory_used_bytes",
+          "legendFormat": "{{area}} used",
+          "refId": "A"
+        }
+      ],
+      "title": "JVM Memory Used",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "logstash_jvm_gc_collection_seconds_count",
+          "legendFormat": "GC Count",
+          "refId": "A"
+        }
+      ],
+      "title": "JVM GC Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "logstash_process_cpu_percent",
+          "legendFormat": "CPU %",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage (%)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "logstash_pipeline_events_filtered_total",
+          "legendFormat": "Filtered Events",
+          "refId": "A"
+        }
+      ],
+      "title": "Filtered Events Total",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "time() - logstash_start_time_seconds",
+          "legendFormat": "Uptime (s)",
+          "refId": "A"
+        }
+      ],
+      "title": "Logstash Uptime",
+      "type": "timeseries"
+    }
+  ],
+  "schemaVersion": 27,
+  "title": "Logstash Monitoring",
+  "version": 1,
+  "refresh": "10s"
+}

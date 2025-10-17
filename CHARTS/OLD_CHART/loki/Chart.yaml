@@ -1,0 +1,6 @@
+apiVersion: v2
+name: loki
+description: Helm chart for deploying production-ready Loki with S3 support
+type: application
+version: 1.0.0
+appVersion: "2.9.0"

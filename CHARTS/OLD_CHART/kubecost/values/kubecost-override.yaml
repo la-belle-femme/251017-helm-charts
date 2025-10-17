@@ -1,0 +1,72 @@
+global:
+  grafana:
+    enabled: true          # Deploy bundled Grafana
+    proxy: true            # Allow Kubecost to proxy it (default)
+  prometheus:
+    enabled: true          # recommanded to bundle Prometheus
+    fqdn: ""               # Leave empty when using internal one
+
+kubecostModel:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+kubecostFrontend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 512Mi
+
+kubecostMetrics:
+  exporter:
+    enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 75
+
+persistentVolume:
+  enabled: true
+  size: 50Gi
+  storageClass: standard-rwo
+
+customPricing:
+  enabled: true
+  config:
+    description: "Custom internal pricing"
+    CPU: "0.031611"
+    RAM: "0.004237"
+
+aggregator:
+  customAggregations:
+    team: "team"
+    environment: "environment"
+    owner: "owner"
+
+kubecostProductConfigs:
+  sharedNamespaces:
+    - kube-system
+    - monitoring
+  sharedNamespaceCostAllocation:
+    - team: platform
+      percentage: 100
+
+networkPolicy:
+  enabled: true
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true

@@ -1,0 +1,20 @@
+replicaCount: 3
+
+loki:
+  auth_enabled: true
+  storage:
+    type: s3
+    s3:
+      bucketnames: "YOUR_S3_BUCKET"
+      endpoint: s3.amazonaws.com
+      region: "AWS_REGION"
+      existingSecret: loki-s3-secret
+      
+
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi

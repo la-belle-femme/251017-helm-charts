@@ -1,0 +1,20 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: restrict-hostpath
+spec:
+  validationFailureAction: {{ .Values.restrictHostPath.validationFailureAction | quote }}
+  rules:
+    - name: validate-hostpath
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        {{- with index .Values.restrictHostPath.rules 0 }}
+        message: {{ .validate.message | quote }}
+        pattern:
+          spec:
+            volumes:
+              - hostPath: "?*"
+        {{- end }}

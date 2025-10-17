@@ -1,0 +1,27 @@
+Thank you for installing Kimai!
+
+1) URL
+   {{- if .Values.ingress.enabled }}
+   https://{{ (first .Values.ingress.hosts).host }}
+   {{- else }}
+   kubectl port-forward svc/{{ include "kimai.fullname" . }} 8080:80
+   http://localhost:8080
+   {{- end }}
+
+2) Admin user (if bootstrap enabled)
+   Username: {{ .Values.kimai.admin.username }}
+   Email:    {{ .Values.kimai.admin.email }}
+
+3) Database
+   {{- if .Values.mariadb.enabled }}
+   Using in-cluster MariaDB ({{ .Release.Name }}-mariadb)
+   {{- else }}
+   Using external DB at {{ .Values.database.host }}:{{ .Values.database.port }}
+   {{- end }}
+
+4) Reports
+   CronJob: {{ include "kimai.fullname" . }}-reports
+   Schedule: {{ .Values.reports.schedule }}
+
+5) Persistence
+   PVC: {{ default (include "kimai.fullname" .) .Values.persistence.existingClaim }}

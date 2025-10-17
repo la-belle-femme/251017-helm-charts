@@ -1,0 +1,79 @@
+{
+    "dashboard": {
+      "id": null,
+      "uid": null,
+      "title": "cAdvisor Metrics Dashboard (s8anatole)",
+      "tags": [
+        "cadvisor",
+        "docker",
+        "kubernetes",
+        "metrics"
+      ],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 1,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Container CPU Usage",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(container_cpu_usage_seconds_total{job=\"cadvisor\", image!=\"\"}[1m])",
+              "legendFormat": "{{container_label_com_docker_swarm_service_name}}",
+              "interval": ""
+            }
+          ],
+          "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+        },
+        {
+          "type": "graph",
+          "title": "Container Memory Usage",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "container_memory_usage_bytes{job=\"cadvisor\", image!=\"\"}",
+              "legendFormat": "{{container_label_com_docker_swarm_service_name}}",
+              "interval": ""
+            }
+          ],
+          "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 }
+        },
+        {
+          "type": "graph",
+          "title": "Container Disk Read I/O",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(container_fs_reads_bytes_total{job=\"cadvisor\", image!=\"\"}[1m])",
+              "legendFormat": "{{container_label_com_docker_swarm_service_name}}",
+              "interval": ""
+            }
+          ],
+          "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 }
+        },
+        {
+          "type": "graph",
+          "title": "Container Disk Write I/O",
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "rate(container_fs_writes_bytes_total{job=\"cadvisor\", image!=\"\"}[1m])",
+              "legendFormat": "{{container_label_com_docker_swarm_service_name}}",
+              "interval": ""
+            }
+          ],
+          "gridPos": { "x": 0, "y": 24, "w": 24, "h": 8 }
+        }
+      ],
+      "templating": {
+        "list": []
+      },
+      "annotations": {
+        "list": []
+      }
+    },
+    "overwrite": true
+  }
+  

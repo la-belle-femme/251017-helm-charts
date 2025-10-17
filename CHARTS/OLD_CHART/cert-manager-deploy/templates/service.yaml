@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cert-manager.name" . }}-webhook
+  labels:
+    app: {{ include "cert-manager.name" . }}
+spec:
+  ports:
+    - port: 443
+      targetPort: 10250
+  selector:
+    app: {{ include "cert-manager.name" . }}

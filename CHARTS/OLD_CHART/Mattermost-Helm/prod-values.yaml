@@ -1,0 +1,96 @@
+mattermost:
+  image:
+    repository: mattermost/mattermost-team-edition
+    tag: "9.8.0"
+    pullPolicy: IfNotPresent
+  env:
+    # Force TLS for PostgreSQL (if enabled)
+    MM_SQLSETTINGS_DRIVERNAME: "postgres"
+    MM_SQLSETTINGS_DATASOURCE: "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=require"
+    MM_SERVICESETTINGS_SITEURL: "https://{{ .Values.ingress.host }}"
+  resources:
+    requests:
+      cpu: "1000m"
+      memory: "2Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+postgresql:
+  enabled: true  # Set to false if using external DB
+  auth:
+    database: "mattermost_prod"
+    username: "mmuser_prod"
+    password: ""  # Override via --set or secrets
+    existingSecret: "mattermost-postgresql-creds"  # Pre-created K8s secret
+  tls:
+    enabled: true
+    certificateSecret: "postgresql-tls-cert"  # Pre-created TLS certs
+  persistence:
+    enabled: true
+    size: "100Gi"
+    storageClass: "gp2-encrypted"  # AWS example
+    accessModes: ["ReadWriteOnce"]
+
+redis:
+  enabled: true
+  architecture: "replication"
+  auth:
+    password: ""  # Override via --set or secrets
+    existingSecret: "mattermost-redis-creds"
+  master:
+    persistence:
+      enabled: true
+      size: "50Gi"
+      storageClass: "gp2-encrypted"
+  replica:
+    replicaCount: 2
+ingress:
+  enabled: true
+  host: "mattermost.example.com"
+  className: "nginx"  # or "traefik"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Cert-Manager integration
+    nginx.ingress.kubernetes.io/proxy-body-size: "100M"  # For file uploads
+  tls:
+    - secretName: "mattermost-tls"
+      hosts: ["mattermost.example.com"]
+
+persistence:
+  uploads:
+    enabled: true
+    size: "50Gi"
+    storageClass: "gp2-encrypted"
+    accessModes: ["ReadWriteOnce"]
+  logs:
+    enabled: true
+    size: "20Gi"
+    storageClass: "gp2-encrypted"
+
+serviceMonitor:
+  enabled: true
+  interval: "30s"
+  scrapeTimeout: "10s"
+  labels:
+    release: "prometheus-operator"  # Matches your Prometheus instance
+
+logs:
+  stdoutEnabled: true  # Ensure Mattermost logs to stdout
+  extraVolumeMounts:
+    - name: uploads
+      mountPath: /mattermost/uploads
+  extraVolumes:
+    - name: uploads
+      persistentVolumeClaim:
+        claimName: mattermost-uploads
+
+existingSecrets:
+  postgresql: "mattermost-postgresql-creds"
+  redis: "mattermost-redis-creds"
+  mattermost: "mattermost-env-secrets"  # For other sensitive env vars
+
+

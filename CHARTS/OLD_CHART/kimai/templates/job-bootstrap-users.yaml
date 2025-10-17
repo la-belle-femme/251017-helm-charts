@@ -1,0 +1,64 @@
+{{- if .Values.bootstrapUsers.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kimai.fullname" . }}-bootstrap-users
+  labels:
+    {{- include "kimai.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: bootstrap
+          image: curlimages/curl:8.7.1
+          command: ["sh","-c"]
+          # 1) obtain admin token by logging in with admin creds
+          # 2) create users & assign roles via API
+          # NOTE: Adjust endpoints to match your Kimai version/API.
+          args:
+            - |
+              set -e
+              BASE_URL="http://{{ include "kimai.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+              ADMIN_EMAIL="$(cat /secrets/admin-email)"
+              ADMIN_PASS="$(cat /secrets/admin-password)"
+
+              # Example: obtain token (replace with the correct auth flow for your Kimai setup)
+              ADMIN_TOKEN=$(curl -sS -X POST "$BASE_URL/api/auth" \
+                -H "Content-Type: application/json" \
+                -d "{\"_username\":\"$ADMIN_EMAIL\",\"_password\":\"$ADMIN_PASS\"}" \
+                | grep -oE '"token":"[^"]+"' | cut -d':' -f2 | tr -d \")
+
+              {{- range $u := .Values.bootstrapUsers.users }}
+              echo "Creating user {{ $u.username }}..."
+              curl -sS -X POST "$BASE_URL/api/users" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{{ dict "username" $u.username "email" $u.email "password" $u.password | toJson }}'
+
+              {{- if $u.roles }}
+              echo "Assigning roles to {{ $u.username }}..."
+              curl -sS -X PUT "$BASE_URL/api/users/{{ $u.username }}/roles" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{{ dict "roles" $u.roles | toJson }}'
+              {{- end }}
+              {{- end }}
+
+              echo "Bootstrap complete."
+          volumeMounts:
+            - name: admin-secrets
+              mountPath: /secrets
+              readOnly: true
+      volumes:
+        - name: admin-secrets
+          projected:
+            sources:
+              - secret:
+                  name: kimai-secret
+                  items:
+                    - key: admin-email
+                      path: admin-email
+                    - key: admin-password
+                      path: admin-password
+{{- end }}

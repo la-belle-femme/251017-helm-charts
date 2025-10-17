@@ -1,0 +1,13 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "cert-manager.fullname" . }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager.name" . }}
+  endpoints:
+    - port: metrics
+      interval: 30s
+{{- end }}

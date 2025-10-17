@@ -1,0 +1,34 @@
+{{- /*
+  NetworkPolicy placeholder for the prom-stack.  It can be used to restrict
+  ingress/egress for monitoring components.  By default no network policy is
+  applied.  Set values.networkPolicy.enabled to true and configure the
+  spec to suit your environment.
+*/ -}}
+
+{{- /*
+  Only render the NetworkPolicy when the networkPolicy object exists and
+  networkPolicy.enabled is set to true.  Without checking for the
+  existence of the object first, Helm will throw a nil pointer error when
+  networkPolicy is undefined.
+*/ -}}
+{{- if and (.Values.networkPolicy) (.Values.networkPolicy.enabled) }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "prom-stack.fullname" . }}
+  labels:
+    {{- include "prom-stack.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "prom-stack.labels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+{{- end }}

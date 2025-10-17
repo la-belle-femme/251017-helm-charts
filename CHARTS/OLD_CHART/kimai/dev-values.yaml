@@ -1,0 +1,18 @@
+ingress:
+  hosts:
+    - host: kimai-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+kimai:
+  appEnv: "dev"
+  admin:
+    email: dev-admin@example.com
+    password: DevPass123!
+    username: devadmin
+ingress:
+  hosts:
+    - host: kimai-dev.local
+      paths:
+        - path: /
+          pathType: Prefix

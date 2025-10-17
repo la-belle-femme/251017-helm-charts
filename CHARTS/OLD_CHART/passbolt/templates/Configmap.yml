@@ -1,0 +1,37 @@
+# configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configmap.name  }}
+  labels:
+    app: {{ .Values.deployment.labels  }}
+data:
+  PASSBOLT_APP_FULL_BASE_URL: {{ .Values.app.fullBaseUrl | quote }}
+  PASSBOLT_APP_NAME: {{ .Values.app.serverName | quote }}
+  PASSBOLT_REGISTRATION_PUBLIC: {{ .Values.app.registrationPublic | quote }}
+  
+  # LDAP configuration
+  {{- if .Values.ldap.enabled }}
+  PASSBOLT_LDAP_ENABLED: "true"
+  PASSBOLT_LDAP_HOST: {{ .Values.ldap.host | quote }}
+  PASSBOLT_LDAP_PORT: {{ .Values.ldap.port | quote }}
+  PASSBOLT_LDAP_USE_START_TLS: {{ .Values.ldap.useStartTLS | quote }}
+  PASSBOLT_LDAP_BASE_DN: {{ .Values.ldap.baseDN | quote }}
+  PASSBOLT_LDAP_SEARCH_DN: {{ .Values.ldap.userDN | quote }}
+  PASSBOLT_LDAP_FILTER: {{ .Values.ldap.filter | quote }}
+  PASSBOLT_LDAP_ATTRIBUTES_EMAIL: {{ .Values.ldap.attrEmail | quote }}
+  PASSBOLT_LDAP_ATTRIBUTES_FIRSTNAME: {{ .Values.ldap.attrFirstname | quote }}
+  PASSBOLT_LDAP_ATTRIBUTES_LASTNAME: {{ .Values.ldap.attrLastname | quote }}
+  PASSBOLT_LDAP_ATTRIBUTES_USERNAME: {{ .Values.ldap.attrUsername | quote }}
+  {{- end }}
+  
+  # Email configuration
+  PASSBOLT_EMAIL_TRANSPORT_DEFAULT_CLASS: {{ .Values.app.emailTransport | quote }}
+  PASSBOLT_EMAIL_DEFAULT_FROM: {{ .Values.app.emailFromAddress | quote }}
+  PASSBOLT_EMAIL_DEFAULT_FROM_NAME: {{ .Values.app.emailFromName | quote }}
+  PASSBOLT_EMAIL_NOTIFICATIONS_SENDER: {{ .Values.app.emailNotificationsSender | quote }}
+  
+  # SMTP configuration
+  PASSBOLT_EMAIL_TRANSPORT_DEFAULT_HOST: {{ .Values.app.smtpHost | quote }}
+  PASSBOLT_EMAIL_TRANSPORT_DEFAULT_PORT: {{ .Values.app.smtpPort | quote }}
+  PASSBOLT_EMAIL_TRANSPORT_DEFAULT_TLS: {{ .Values.app.smtpTLS | quote }}

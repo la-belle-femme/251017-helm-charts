@@ -1,0 +1,6 @@
+apiVersion: v2
+name: alertmanager
+description: A production-ready Alertmanager Helm chart
+type: application
+version: 1.0.0
+appVersion: "v0.26.0"

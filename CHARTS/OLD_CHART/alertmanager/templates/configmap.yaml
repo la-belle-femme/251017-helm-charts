@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alertmanager.fullname" . }}-config
+  labels:
+    {{- include "alertmanager.labels" . | nindent 4 }}
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      receiver: mattermost
+
+    receivers:
+      - name: mattermost
+        webhook_configs:
+          - url: '{{ .Values.mattermostWebhookUrl }}'
+            send_resolved: true

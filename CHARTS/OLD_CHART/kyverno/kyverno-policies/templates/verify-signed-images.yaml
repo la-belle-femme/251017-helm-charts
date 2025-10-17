@@ -1,0 +1,34 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-signed-images
+spec:
+  validationFailureAction: {{ .Values.verifySignedImages.validationFailureAction | quote }}
+  rules:
+    - name: verify-signatures
+      match:
+        resources:
+          kinds:
+            - Pod
+      verifyImages:
+{{- with index .Values.verifySignedImages.rules 0 }}
+{{- with index .verifyImages 0 }}
+        - image: {{ .image | quote }}
+          key: |
+{{ .key | indent 12 }}
+          mutateDigest: {{ .mutateDigest }}
+          attestations:
+{{- range .attestations }}
+            - type: {{ .type | quote }}
+              conditions:
+{{- range .conditions }}
+                - all:
+{{- range .all }}
+                    - key: {{ .key | quote }}
+                      operator: {{ .operator | quote }}
+                      value: {{ .value | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

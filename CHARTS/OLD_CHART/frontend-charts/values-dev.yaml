@@ -1,0 +1,74 @@
+replicaCount: 2
+
+image:
+  repository: 597088047986.dkr.ecr.us-east-1.amazonaws.com/connect-frontend
+  tag: "76fb"
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: ecr-pull-secret
+
+secret:
+  name: connect-frontend
+
+serviceAccount:
+  create: true
+  name: frontend-serviceaccount
+
+service:
+  type: ClusterIP
+  port: 3000
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: 3000
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+securityContext:
+  enabled: true
+  runAsUser: 1000
+  runAsGroup: 3000
+  fsGroup: 2000
+  allowPrivilegeEscalation: false
+
+networkPolicy:
+  enabled: false
+  ingress: []
+  egress: []
+
+configMap:
+  name: connect-frontend
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: false
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: frontend.dev.webforxtech.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+

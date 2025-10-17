@@ -1,0 +1,40 @@
+install.go:200: [debug] Original chart version: ""
+install.go:217: [debug] CHART PATH: C:\Users\13477\Dropbox\WEBFOX INTERSHIP\Task#24-Deploy-Forgejo-with-Helm-Chart\forgejo-github-alternative-helm-chart\forgejo-helm\helm-charts\forgejo
+
+Error: INSTALLATION FAILED: cannot re-use a name that is still in use
+helm.go:84: [debug] cannot re-use a name that is still in use
+helm.sh/helm/v3/pkg/action.(*Install).availableName
+	helm.sh/helm/v3/pkg/action/install.go:517
+helm.sh/helm/v3/pkg/action.(*Install).RunWithContext
+	helm.sh/helm/v3/pkg/action/install.go:227
+main.runInstall
+	helm.sh/helm/v3/cmd/helm/install.go:287
+main.newInstallCmd.func2
+	helm.sh/helm/v3/cmd/helm/install.go:145
+github.com/spf13/cobra.(*Command).execute
+	github.com/spf13/cobra@v1.6.1/command.go:916
+github.com/spf13/cobra.(*Command).ExecuteC
+	github.com/spf13/cobra@v1.6.1/command.go:1044
+github.com/spf13/cobra.(*Command).Execute
+	github.com/spf13/cobra@v1.6.1/command.go:968
+main.main
+	helm.sh/helm/v3/cmd/helm/helm.go:83
+runtime.main
+	runtime/proc.go:250
+runtime.goexit
+	runtime/asm_amd64.s:1598
+INSTALLATION FAILED
+main.newInstallCmd.func2
+	helm.sh/helm/v3/cmd/helm/install.go:147
+github.com/spf13/cobra.(*Command).execute
+	github.com/spf13/cobra@v1.6.1/command.go:916
+github.com/spf13/cobra.(*Command).ExecuteC
+	github.com/spf13/cobra@v1.6.1/command.go:1044
+github.com/spf13/cobra.(*Command).Execute
+	github.com/spf13/cobra@v1.6.1/command.go:968
+main.main
+	helm.sh/helm/v3/cmd/helm/helm.go:83
+runtime.main
+	runtime/proc.go:250
+runtime.goexit
+	runtime/asm_amd64.s:1598

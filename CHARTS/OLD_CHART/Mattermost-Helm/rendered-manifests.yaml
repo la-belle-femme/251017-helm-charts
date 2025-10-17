@@ -1,0 +1,438 @@
+---
+# Source: mattermost-team-edition/charts/mysql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mattermost-mysql
+  namespace: mattermost
+  labels:
+    app: mattermost-mysql
+    chart: "mysql-1.6.4"
+    release: "mattermost"
+    heritage: "Helm"
+type: Opaque
+data:
+  
+  
+  mysql-root-password: "ZGk3QW4xY2hORQ=="
+  
+  
+  
+  
+  mysql-password: "ekhPU3R6akJtdw=="
+---
+# Source: mattermost-team-edition/templates/secret-config.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mattermost-mattermost-team-edition-config
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+type: Opaque
+data:
+  MM_PLUGINSETTINGS_CLIENTDIRECTORY: Li9jbGllbnQvcGx1Z2lucw==
+---
+# Source: mattermost-team-edition/templates/secret-mattermost-dbsecret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mattermost-mattermost-team-edition-mattermost-dbsecret
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart:  mattermost-team-edition-6.6.80
+type: Opaque
+data:
+  mattermost.dbsecret: bXlzcWw6Ly86QHRjcChtYXR0ZXJtb3N0LW15c3FsOjMzMDYpL21hdHRlcm1vc3Q/Y2hhcnNldD11dGY4bWI0LHV0ZjgmcmVhZFRpbWVvdXQ9MzBzJndyaXRlVGltZW91dD0zMHM=
+---
+# Source: mattermost-team-edition/templates/tests/mattermost-config-test.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mattermost-mattermost-team-edition-tests
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+data:
+  run.sh: |-
+    #!/usr/bin/env bats
+    @test "Testing Mattermost is accessible" {
+      url="http://mattermost-team-edition.mattermost.svc.cluster.local:8065"
+      code=$(wget --server-response --spider --timeout 10 --tries 1 ${url} 2>&1 | awk '/^  HTTP/{print $2}')
+      [ "$code" == "200" ]
+    }
+---
+# Source: mattermost-team-edition/charts/mysql/templates/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mattermost-mysql
+  namespace: mattermost
+  labels:
+    app: mattermost-mysql
+    chart: "mysql-1.6.4"
+    release: "mattermost"
+    heritage: "Helm"
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "10Gi"
+---
+# Source: mattermost-team-edition/templates/pvc-plugins.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mattermost-mattermost-team-edition-plugins
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+  annotations:
+spec:
+  accessModes:
+  - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "1Gi"
+---
+# Source: mattermost-team-edition/templates/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mattermost-mattermost-team-edition
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+  annotations:
+spec:
+  accessModes:
+  - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "10Gi"
+---
+# Source: mattermost-team-edition/charts/mysql/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mattermost-mysql
+  namespace: mattermost
+  labels:
+    app: mattermost-mysql
+    chart: "mysql-1.6.4"
+    release: "mattermost"
+    heritage: "Helm"
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: mysql
+  selector:
+    app: mattermost-mysql
+---
+# Source: mattermost-team-edition/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mattermost-team-edition
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+spec:
+  selector:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+  type: ClusterIP
+  ports:
+  - port: 8065
+    targetPort: http
+    protocol: TCP
+    name: mattermost-team-edition
+---
+# Source: mattermost-team-edition/charts/mysql/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mattermost-mysql
+  namespace: mattermost
+  labels:
+    app: mattermost-mysql
+    chart: "mysql-1.6.4"
+    release: "mattermost"
+    heritage: "Helm"
+
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mattermost-mysql
+      release: mattermost
+  template:
+    metadata:
+      labels:
+        app: mattermost-mysql
+        release: mattermost
+    spec:
+      serviceAccountName: default
+      initContainers:
+      - name: "remove-lost-found"
+        image: "busybox:1.31.1"
+        imagePullPolicy: "IfNotPresent"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
+        command:  ["rm", "-fr", "/var/lib/mysql/lost+found"]
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+      # - name: do-something
+      #   image: busybox
+      #   command: ['do', 'something']
+      
+      containers:
+      - name: mattermost-mysql
+        image: "mysql:8.0.18"
+        imagePullPolicy: "IfNotPresent"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mattermost-mysql
+              key: mysql-root-password
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mattermost-mysql
+              key: mysql-password
+              optional: true
+        - name: MYSQL_USER
+          value: ""
+        - name: MYSQL_DATABASE
+          value: "mattermost"
+        ports:
+        - name: mysql
+          containerPort: 3306
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 1
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        # - name: extras
+        #   mountPath: /usr/share/extras
+        #   readOnly: true
+        
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mattermost-mysql
+      # - name: extras
+      #   emptyDir: {}
+---
+# Source: mattermost-team-edition/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mattermost-mattermost-team-edition
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+spec:
+  replicas: 1
+  strategy: 
+    rollingUpdate: null
+    type: RollingUpdate
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mattermost-team-edition
+      app.kubernetes.io/instance: mattermost
+      app.kubernetes.io/managed-by: Helm
+  template:
+    metadata:
+      annotations:
+        checksum/config: 1b7a21f664796c23e164c99204ce1b62f53150d040a0fcc5f79921bd770e4030
+      labels:
+        app.kubernetes.io/name: mattermost-team-edition
+        app.kubernetes.io/instance: mattermost
+        app.kubernetes.io/managed-by: Helm
+        helm.sh/chart: mattermost-team-edition-6.6.80
+    spec:
+      initContainers:
+      - name: "init-mysql"
+        image: "appropriate/curl:latest"
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "until curl --max-time 10 http://mattermost-mysql:3306; do echo waiting for mattermost-mysql; sleep 5; done;"]
+      containers:
+      - name: mattermost-team-edition
+        image: "mattermost/mattermost-team-edition:10.9.1@sha256:445ef98396678f3d4e269e05e11738e7a808e54c414db24625a855c37b5f978b"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MM_CONFIG
+          valueFrom:
+            secretKeyRef:
+              name: mattermost-mattermost-team-edition-mattermost-dbsecret
+              key: mattermost.dbsecret
+        envFrom:
+        - secretRef:
+            name:  mattermost-mattermost-team-edition-config
+        ports:
+        - name: http
+          containerPort: 8065
+          protocol: TCP
+        startupProbe:
+          failureThreshold: 30
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          httpGet:
+            path: /healthz
+            port: http
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          timeoutSeconds: 5
+          httpGet:
+            path: /api/v4/system/ping
+            port: http
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          httpGet:
+            path: /api/v4/system/ping
+            port: http
+        volumeMounts:
+        - mountPath: /mattermost/config
+          name: mattermost-config
+        - mountPath: /mattermost/data
+          name: mattermost-data
+        - mountPath: /mattermost/client/plugins
+          name: mattermost-plugins
+        resources:
+            null
+      volumes:
+      - name: mattermost-config
+        emptyDir: {}
+      - name: mattermost-data
+      
+        persistentVolumeClaim:
+          claimName: mattermost-mattermost-team-edition
+      
+      - name: mattermost-plugins
+      
+        persistentVolumeClaim:
+          
+          claimName: mattermost-mattermost-team-edition-plugins
+---
+# Source: mattermost-team-edition/templates/ingress.yaml
+apiVersion: "networking.k8s.io/v1"
+kind: Ingress
+metadata:
+  name: mattermost-mattermost-team-edition
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 100M
+spec:
+  ingressClassName: nginx
+  rules:
+  
+  - host: "mattermost.example.com"
+    http:
+      paths:
+      - path: /
+        backend:
+          service:
+            name: mattermost-team-edition
+            port:
+              number: 8065
+        pathType: Prefix
+  
+  
+  tls:
+    - hosts:
+      - mattermost.example.com
+      secretName: mattermost-tls
+---
+# Source: mattermost-team-edition/templates/tests/mattermost-test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "mattermost-mattermost-team-edition-test"
+  labels:
+    app.kubernetes.io/name: mattermost-team-edition
+    app.kubernetes.io/instance: mattermost
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: mattermost-team-edition-6.6.80
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+  - name: mattermost-test
+    image: bats/bats:v1.1.0
+    command: ["/opt/bats/bin/bats", "-t", "/tests/run.sh"]
+    volumeMounts:
+    - mountPath: /tests
+      name: tests
+      readOnly: true
+    - mountPath: /tools
+      name: tools
+  volumes:
+  - name: tests
+    configMap:
+      name: mattermost-mattermost-team-edition-tests
+  - name: tools
+    emptyDir: {}
+  restartPolicy: Never

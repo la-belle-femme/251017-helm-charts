@@ -1,0 +1,5 @@
+run base64 -w 0 tls/ca.crt
+past output in secrets/logstash-tls-secret.yaml 
+this way 
+data:
+  ca.crt: <base64-output-here>
