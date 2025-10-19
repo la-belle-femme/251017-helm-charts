@@ -11,8 +11,8 @@ args:
 
 resources:
   requests:
-    cpu: 101m
-    memory: 201Mi
+    cpu: 100m
+    memory: 200Mi
   limits:
     cpu: 100m
     memory: 200Mi
