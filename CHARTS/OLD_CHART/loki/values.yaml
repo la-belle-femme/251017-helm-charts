@@ -1,0 +1,15 @@
+replicaCount: 1
+
+image:
+  repository: grafana/loki
+  tag: 2.9.0
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3100
+
+loki:
+  auth_enabled: false
+
+resources: {}

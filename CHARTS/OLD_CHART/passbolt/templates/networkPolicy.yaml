@@ -1,0 +1,56 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ .Values.networkPolicy.name  }}
+  labels:
+    app: {{ .Values.deployment.labels  }}
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ .Values.deployment.labels  }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
+  egress:
+    # Database connection
+    {{- if .Values.networkPolicy.databaseEgress.enabled }}
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.databaseEgress.cidr }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.databaseEgress.port }}
+    {{- end }}
+    
+    # LDAP connection
+    {{- if and .Values.ldap.enabled .Values.networkPolicy.ldapEgress.enabled }}
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.ldapEgress.cidr }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.ldapEgress.port }}
+    {{- end }}
+    
+    # SMTP connection
+    {{- if .Values.networkPolicy.smtpEgress.enabled }}
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.networkPolicy.smtpEgress.cidr }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.networkPolicy.smtpEgress.port }}
+    {{- end }}
+    
+    # DNS resolution
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+{{- end }}

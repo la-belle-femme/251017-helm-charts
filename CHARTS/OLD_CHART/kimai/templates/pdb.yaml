@@ -1,0 +1,9 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "kimai.fullname" . }}
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "kimai.labels" . | nindent 6 }}

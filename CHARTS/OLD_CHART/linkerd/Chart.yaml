@@ -1,0 +1,19 @@
+apiVersion: v2
+name: linkerd
+version: 0.1.0
+description: A production-grade Linkerd Helm chart with HA, mTLS, observability, and optional tracing
+appVersion: "stable-2.14.3"
+
+dependencies:
+  - name: linkerd-crds
+    version: 1.8.0
+    repository: https://helm.linkerd.io/stable
+  - name: linkerd-control-plane
+    version: 1.15.0
+    repository: https://helm.linkerd.io/stable
+  - name: linkerd-viz
+    version: 30.12.11
+    repository: https://helm.linkerd.io/stable
+  - name: linkerd-jaeger
+    version: 30.12.4
+    repository: https://helm.linkerd.io/stable

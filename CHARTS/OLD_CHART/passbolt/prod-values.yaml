@@ -1,0 +1,230 @@
+# Production environment values for Passbolt
+nameOverride: "passbolt-prod"
+
+# Production environment should use multiple replicas for high availability
+replicaCount: 3
+
+# Production image configuration with specific version for stability
+image:
+  repository: passbolt/passbolt
+  pullPolicy: IfNotPresent
+  tag: "5.0.0-1-pro-non-root"  # Lock to specific stable version in production
+
+# Secret names for production with more explicit naming
+secret:
+  database:
+    name: passbolt-prod-db-secret
+  ldap:
+    name: passbolt-prod-ldap-secret
+  smtp:
+    name: passbolt-prod-smtp-secret
+  gpg:
+    name: passbolt-prod-gpg-secret
+  jwt:
+    name: passbolt-prod-jwt-secret
+
+# Production deployment settings
+deployment:
+  name: passbolt-prod-deployment
+  labels: passbolt-prod
+
+# Production service configuration
+service:
+  name: passbolt-prod-service
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Enable ingress for production with TLS
+ingress:
+  enabled: true
+  name: passbolt-prod-ingress
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"  
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+  hosts:
+    - host: passbolt.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: passbolt-prod-tls
+      hosts:
+        - passbolt.example.com
+
+# Production resources - higher limits for reliability under load
+resources:
+  limits:
+    cpu: 2
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# More conservative probe settings for production reliability
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 120
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /healthz/status
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Production persistence with larger size
+persistence:
+  enabled: true
+  name: passbolt-prod-pvc
+  storageClass: "ssd-storage"  # Use faster storage in production
+  acceesMode: ReadWriteMany  # Better for multi-replica deployments
+  size: 10Gi  # Larger storage for production data
+
+# Enable autoscaling for production
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
+
+# Production database configuration
+database:
+  host: "mariadb-prod.database.svc.cluster.local"  # Fully qualified service name
+  port: 3306
+  user: "passbolt"
+  password: ""  # Should be set in Kubernetes secrets
+  name: "passbolt_prod"
+  existingSecret: "passbolt-prod-db-secret"  # Reference existing secret
+
+# Production LDAP setup
+ldap:
+  enabled: true
+  host: "ldap.example.com"
+  port: 636  # Use secure LDAP port
+  useStartTLS: true
+  baseDN: "dc=example,dc=com"
+  userDN: "ou=employees,dc=example,dc=com"
+  bind:
+    dn: "cn=passbolt-svc,ou=service-accounts,dc=example,dc=com"
+    password: ""  # Should be set in Kubernetes secrets
+  existingSecret: "passbolt-prod-ldap-secret"
+  filter: "(&(objectClass=person)(|(uid=%s)(mail=%s)))"
+  attrEmail: "mail"
+  attrFirstname: "givenName"
+  attrLastname: "sn"
+  attrUsername: "uid"
+
+# Production encryption setup - use existing secrets
+encryption:
+  gpg:
+    existingSecret: "passbolt-prod-gpg-secret"
+    autoGenerate: false  # Don't auto-generate in production
+  jwt:
+    existingSecret: "passbolt-prod-jwt-secret"  
+    autoGenerate: false  # Don't auto-generate in production
+
+# Production application configuration
+app:
+  fullBaseUrl: "https://passbolt.example.com"
+  serverName: "Passbolt"
+  registrationPublic: false  # Disable public registration in production
+  emailTransport: "smtp"
+  emailFromAddress: "passbolt@example.com"
+  emailFromName: "Passbolt"
+  emailNotificationsSender: "no-reply@example.com"
+  smtpHost: "smtp.example.com"
+  smtpPort: 587
+  smtpTLS: true
+  smtpUsername: ""  # Should be set in Kubernetes secrets
+  smtpPassword: ""  # Should be set in Kubernetes secrets
+  existingSmtpSecret: "passbolt-prod-smtp-secret"
+
+# Pod security context for production
+podSecurityContext:
+  fsGroup: 33  # www-data group
+  runAsNonRoot: true
+  runAsUser: 33  # www-data user
+
+# Security context for containers in production
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+# Production node placement
+nodeSelector:
+  tier: application
+  environment: production
+
+# Production tolerations
+tolerations:
+  - key: "workload-type"
+    operator: "Equal"
+    value: "application"
+    effect: "NoSchedule"
+
+# Production affinity rules - spread pods across nodes
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - passbolt-prod
+          topologyKey: "kubernetes.io/hostname"
+
+# Network policies for production security
+networkPolicy:
+  enabled: true
+  name: passbolt-prod-networkpolicy
+  databaseEgress:
+    enabled: true
+    port: 3306
+    cidr: "10.0.0.0/16"  # Adjust for your production network
+  ldapEgress:
+    enabled: true
+    port: 636  # Use secure LDAP port
+    cidr: "10.0.0.0/16"  # Adjust for your production network
+  smtpEgress:
+    enabled: true
+    port: 587
+    cidr: "0.0.0.0/0"  # Usually SMTP is external
+
+# RBAC configuration for production - minimal permissions
+rbac:
+  create: true
+  name: passbolt-prod-rbac
+  binding:
+    name: passbolt-prod-binding
+  rules:
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get"]
+
+# Monitoring configuration for production
+monitoring:
+  podMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /healthz
+    port: http

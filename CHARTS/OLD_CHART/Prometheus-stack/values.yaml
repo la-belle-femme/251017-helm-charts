@@ -1,0 +1,24 @@
+# Default values for the wrapper chart.
+#
+# Only values under the `kube‑prometheus‑stack` key will be passed down to the
+# dependency.  See `values-override.yaml` for a full example of the overrides
+# used to enable alert routing, dashboards and custom rules.  Most of the
+# defaults here simply enable the dependency chart.
+
+networkPolicy:
+  enabled: false
+
+ingress:
+  enabled: false
+
+kube-prometheus-stack:
+  enabled: true
+
+  # Install the CRDs by default so that PrometheusRule, ServiceMonitor and
+  # related resources can be created.  Without these CRDs the operator
+  # components will not start【553677577333195†L31-L35】.
+  crds:
+    enabled: true
+
+  # No other defaults are set here – override everything you need in
+  # `values-override.yaml` instead of editing this file.

@@ -1,0 +1,38 @@
+replicaCount: 2
+
+image:
+  repository: registry.k8s.io/metrics-server/metrics-server
+  tag: "v0.7.1"
+
+# Required for most Kubernetes deployments to work properly
+args:
+  - --kubelet-insecure-tls
+  - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+
+resources:
+  requests:
+    cpu: 101m
+    memory: 201Mi
+  limits:
+    cpu: 100m
+    memory: 200Mi
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 443
+
+# Security context for pod
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container security context
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true

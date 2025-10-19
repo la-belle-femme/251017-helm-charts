@@ -1,0 +1,9 @@
+{{/* This file is intentionally minimal as Linkerd logic is handled in subcharts */}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: linkerd-install-info
+  namespace: {{ include "linkerd.namespace" . }}
+data:
+  message: "Linkerd will be installed using subcharts with values from values.yaml"

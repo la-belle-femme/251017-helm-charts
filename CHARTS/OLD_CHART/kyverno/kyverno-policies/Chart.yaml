@@ -1,0 +1,12 @@
+apiVersion: v2
+name: kyverno-policies
+description: A collection of Kyverno security policies
+type: application
+version: 0.1.0
+appVersion: 1.14.2
+keywords:
+  - kyverno
+  - security
+home: https://kyverno.io
+sources:
+  - https://github.com/kyverno/kyverno

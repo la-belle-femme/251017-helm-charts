@@ -1,0 +1,94 @@
+requireProbes:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "Liveness and readiness probes are required."
+        pattern:
+          spec:
+            containers:
+              - livenessProbe:
+                  httpGet:
+                    path: "?*"
+                    port: "?*"
+                readinessProbe:
+                  httpGet:
+                    path: "?*"
+                    port: "?*"
+
+
+requireResources:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "Resource requests and limits are required for all containers."
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    memory: "?*"
+                    cpu: "?*"
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"
+
+disallowLatestTag:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "Using 'latest' tag is not allowed."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+
+enforceNamespaceLabels:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "Required labels are missing from namespace."
+        pattern:
+          metadata:
+            labels:
+              environment: "?*"
+              team: "?*"
+
+disallowPrivilegedContainers:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "Privileged containers are not allowed."
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: false
+
+restrictHostPath:
+  validationFailureAction: Enforce
+  rules:
+    - validate:
+        message: "hostPath volumes are not allowed."
+        pattern:
+          spec:
+            volumes:
+              - hostPath: "?*"
+
+verifySignedImages:
+  validationFailureAction: Audit
+  rules:
+    - verifyImages:
+        - image: "*"
+          key: |
+            -----BEGIN PUBLIC KEY-----
+            MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWNQH+2ukSut9n4WNv0NNNzoBGpts
+            z8MYfaeD/JuV0XKMfsIBdq74RMZLuPsIJbTz0efXca8PbRhUL+6sFgK2pg==
+            -----END PUBLIC KEY-----
+          mutateDigest: false
+          attestations:
+            - type: "cosign.sigstore.dev/attestation/v1"
+              conditions:
+                - all:
+                    - key: "predicateType"
+                      operator: "Equals"
+                      value: "https://slsa.dev/provenance/v0.2"

@@ -1,0 +1,13 @@
+Linkerd has been deployed successfully!
+
+To verify the installation, run:
+  linkerd check
+
+To open the dashboard:
+  linkerd viz dashboard
+
+Grafana is available at:
+  http://localhost:50750 (after port-forwarding)
+
+Tracing (Jaeger) is available at:
+  http://localhost:16686 (if enabled)

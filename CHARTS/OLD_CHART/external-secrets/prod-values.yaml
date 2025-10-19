@@ -1,0 +1,146 @@
+auditLogging:
+  enabled: true # Set to true if you want to enable audit logging and provide configuration
+
+replicaCount: 3
+
+image:
+  repository: ghcr.io/external-secrets/external-secrets
+  tag: v0.9.17
+  pullPolicy: IfNotPresent
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  name: ""
+  automount: true
+
+externalSecrets:
+  enabled: true
+  name: my-app-secret
+  namespace: external-secrets
+  refreshInterval: 1h
+  storeRef:
+    name: aws-secretstore
+    kind: SecretStore
+  target:
+    name: my-app-secret
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    awsSecretKey: aws-api-key
+    awsRemoteKey: prod/api-key
+    vaultSecretKey: vault-db-password
+    vaultRemoteKey: secret/data/db
+    vaultProperty: password
+  additionalStores: []
+  vaultStoreEnabled: true
+  awsStoreEnabled: true
+
+webhook:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+tolerations: []
+affinity: {}
+nodeSelector: {}
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+priorityClassName: "system-cluster-critical"
+
+aws:
+  region: us-east-1
+  credentialsSecretName: aws-credentials
+
+vault:
+  server: https://vault.example.com
+  path: secret
+  tokenSecretName: vault-token
+
+secretStore:
+  create: true
+  stores:
+    - name: aws-secretstore
+      provider:
+        aws:
+          region: us-east-1
+          auth:
+            secretRef:
+              accessKeyIDSecretRef:
+                name: aws-credentials
+                key: access-key-id
+              secretAccessKeySecretRef:
+                name: aws-credentials
+                key: secret-access-key
+    - name: vault-secretstore
+      provider:
+        vault:
+          server: https://vault.edusuc.net
+          path: Dev-secret/data/AWS_STAGE_ACCOUNT
+          version: v2
+          auth:
+            tokenSecretRef:
+              name: vault-token
+              key: token
+
+clusterSecretStore:
+  create: true
+  stores:
+    - name: vault-cluster-secret-store
+      provider:
+        vault:
+          server: https://vault.edusuc.net
+          path: Dev-secret/data/AWS_STAGE_ACCOUNT
+          version: v2
+          auth:
+            tokenSecretRef:
+              name: vault-token
+              key: token
+    - name: aws-cluster-secretstore
+      provider:
+        aws:
+          region: us-east-1
+          auth:
+            secretRef:
+              accessKeyIDSecretRef:
+                name: aws-credentials
+                key: access-key-id
+              secretAccessKeySecretRef:
+                name: aws-credentials
+                key: secret-access-key
+
+networkPolicy:
+  enabled: true
+  ingress:
+    pods:
+      - name: prometheus
+        namespace: monitoring
+        labels:
+          app.kubernetes.io/name: prometheus
+        port: 8080
+        protocol: TCP
+  egress:
+    to:
+      - ports:
+          - port: 443
+            protocol: TCP
+        to:
+          - ipBlock:
+              cidr: 0.0.0.0/0
+

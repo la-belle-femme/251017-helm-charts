@@ -1,0 +1,106 @@
+replicaCount: 2
+
+image:
+  repository: kimai/kimai2
+  tag: apache
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+serviceAccount:
+  create: true
+  name: ""
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: kimai.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: ""
+
+kimai:
+  appEnv: "prod"
+  trustedProxies: "127.0.0.1,REMOTE_ADDR"
+  trustedHosts: ".*"
+  locale: "en"
+  timezone: "UTC"
+  behindProxy: true
+  admin:
+    email: default-admin@example.com
+    password: StrongPass123!
+    username: admin
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: rootPassword123
+    username: kimai
+    password: kimaiPassword123
+    database: kimai
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+database:
+  external: true
+  host: kimai-mariadb
+  port: 3306
+  name: kimai
+  user: kimai
+  password: kimaiPassword123
+
+reports:
+  enabled: true
+  schedule: "0 2 * * *"
+  mode: http
+  http:
+    url: "http://kimai.local/api/export"
+    method: POST
+    headers: []
+  cli:
+    command: ["php", "bin/console", "kimai:export:timesheets"]
+    args: []
+    workingDir: /opt/kimai
+
+bootstrapUsers:
+  enabled: false
+  users: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+reports:
+  enabled: false
+  image:
+    repository: myregistry/timesheet-reports
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  schedule: "0 0 * * *" # daily at midnight
+  resources: {}
+  env: {}

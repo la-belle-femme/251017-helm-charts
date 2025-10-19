@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: loki-allow-grafana
+  namespace: loki
+spec:
+  podSelector:
+    matchLabels:
+      app: loki
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: grafana
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.port }}
+  policyTypes:
+    - Ingress

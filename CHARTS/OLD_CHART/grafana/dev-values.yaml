@@ -1,0 +1,22 @@
+admin:
+  existingSecret: grafana-admin-secret-dev
+
+database:
+  type: mysql
+  host: dev-mysql:3306
+  name: grafana
+  user: grafanauser
+  password:
+    existingSecret: grafana-mysql-secret-dev
+    key: mysql-password
+
+ingress:
+  enabled: false
+
+grafana.ini:
+  auth.anonymous:
+    enabled: true
+  metrics:
+    enabled: true
+  analytics:
+    reporting_enabled: false

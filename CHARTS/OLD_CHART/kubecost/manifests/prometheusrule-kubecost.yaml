@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kubecost-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: kubecost.rules
+      rules:
+        - alert: KubecostAnomalyDetected
+          expr: |
+            max_over_time(kubecost_anomalies[5m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Kubecost anomaly detected"
+            description: "One or more cost anomalies detected by Kubecost in the last 5 minutes."

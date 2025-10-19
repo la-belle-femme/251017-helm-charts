@@ -1,0 +1,21 @@
+{{- $enabled := .Values.enabled }}
+{{- if and (kindIs "map" $enabled) (hasKey $enabled "blockLatest") (eq $enabled.blockLatest true) }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: enforce
+  rules:
+    - name: validate-image-tag
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Using 'latest' image tag is not allowed. Please use a specific version."
+        pattern:
+          spec:
+            containers:
+              - image: "!*:latest"
+{{- end }}

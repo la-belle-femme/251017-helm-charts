@@ -1,0 +1,21 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: enforce-namespace-labels
+spec:
+  validationFailureAction: {{ .Values.enforceNamespaceLabels.validationFailureAction | quote }}
+  rules:
+    - name: check-required-labels
+      match:
+        resources:
+          kinds:
+            - Namespace
+      validate:
+        {{- with index .Values.enforceNamespaceLabels.rules 0 }}
+        message: {{ .validate.message | quote }}
+        pattern:
+          metadata:
+            labels:
+              environment: "?*"
+              team: "?*"
+        {{- end }}

@@ -1,0 +1,18 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes
+spec:
+  validationFailureAction: {{ .Values.requireProbes.validationFailureAction | quote }}
+  rules:
+    - name: validate-probes
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        {{- with index .Values.requireProbes.rules 0 }}
+        message: {{ .validate.message | quote }}
+        pattern:
+{{ toYaml .validate.pattern | indent 10 }}
+        {{- end }}

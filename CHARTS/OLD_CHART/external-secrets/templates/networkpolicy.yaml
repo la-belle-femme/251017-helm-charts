@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "external-secrets.fullname" . }}-network-policy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "external-secrets.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: external-secrets
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: external-secrets
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            {{- if .Values.networkPolicy.egress.excludeCIDRs }}
+            except:
+              {{- toYaml .Values.networkPolicy.egress.excludeCIDRs | nindent 14 }}
+            {{- end }}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 443
+

@@ -1,0 +1,23 @@
+{{- $enabled := .Values.enabled }}
+{{- if and (kindIs "map" $enabled) (hasKey $enabled "requireLabels") (eq $enabled.requireLabels true) }}
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-standard-labels
+spec:
+  validationFailureAction: enforce
+  rules:
+    - name: require-labels
+      match:
+        resources:
+          kinds:
+            - Pod
+      validate:
+        message: "Missing required labels: app, env, owner."
+        pattern:
+          metadata:
+            labels:
+              app: "?*"
+              env: "?*"
+              owner: "?*"
+{{- end }}

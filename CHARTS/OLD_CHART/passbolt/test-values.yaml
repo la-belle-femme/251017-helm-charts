@@ -1,0 +1,241 @@
+# Testing environment values for Passbolt
+nameOverride: "passbolt-test"
+
+# Use 2 replicas for testing high-availability features
+replicaCount: 2
+
+configmap:
+  name: passbolt-test-configmap
+
+# Secret names for test environment
+secret:
+  database:
+    name: passbolt-test-db-secret
+  ldap:
+    name: passbolt-test-ldap-secret
+  smtp:
+    name: passbolt-test-smtp-secret
+  gpg:
+    name: passbolt-test-gpg-secret
+  jwt:
+    name: passbolt-test-jwt-secret
+
+# Test deployment settings
+deployment:
+  name: passbolt-test-deployment
+  labels: passbolt-test
+
+# Use a slightly older but stable version for testing
+image:
+  repository: passbolt/passbolt
+  pullPolicy: IfNotPresent
+  tag: "4.7.0-1-pro-non-root"  # Different version to test upgrades
+
+# Test service configuration
+service:
+  name: passbolt-test-service
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+# Simple ingress for test environment
+ingress:
+  enabled: true
+  name: passbolt-test-ingress
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: passbolt.test.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Moderate resources for test environment
+resources:
+  limits:
+    cpu: 1
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 512Mi
+
+# Moderate probe settings for test environment
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 3
+  failureThreshold: 4
+readinessProbe:
+  httpGet:
+    path: /healthz/status
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Test persistence with moderate size
+persistence:
+  enabled: true
+  name: passbolt-test-pvc
+  storageClass: "standard"
+  acceesMode: ReadWriteOnce
+  size: 2Gi
+
+# Enable autoscaling with modest settings for testing
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 75
+
+# Test database configuration
+database:
+  host: "mariadb-test.test.svc.cluster.local"
+  port: 3306
+  user: "passbolt_test"
+  password: "testpassword"  # For testing only
+  name: "passbolt_test"
+  existingSecret: ""
+
+# Test LDAP setup
+ldap:
+  enabled: true  # Enable to test LDAP integration
+  host: "openldap-test.test.svc.cluster.local"
+  port: 389  # Non-secure port for test environment
+  useStartTLS: false  # Simplified for testing
+  baseDN: "dc=test,dc=local"
+  userDN: "ou=users,dc=test,dc=local"
+  bind:
+    dn: "cn=admin,dc=test,dc=local"
+    password: "testldappassword"  # For testing only
+  existingSecret: ""
+  filter: "(&(objectClass=person)(|(uid=%s)(mail=%s)))"
+  attrEmail: "mail"
+  attrFirstname: "givenName"
+  attrLastname: "sn"
+  attrUsername: "uid"
+
+# Test encryption setup - mix of auto-generate and provided
+encryption:
+  gpg:
+    existingSecret: "passbolt-test-gpg-secret"
+    autoGenerate: false
+  jwt:
+    existingSecret: ""
+    autoGenerate: true  # Auto-generate for testing
+
+# Test application configuration
+app:
+  fullBaseUrl: "http://passbolt.test.local"
+  serverName: "Passbolt TEST"
+  registrationPublic: true  # Enable for testing user registration
+  emailTransport: "smtp"
+  emailFromAddress: "passbolt-test@example.com"
+  emailFromName: "Passbolt TEST"
+  emailNotificationsSender: "passbolt-test@example.com"
+  smtpHost: "mailhog.test.svc.cluster.local"
+  smtpPort: 1025  # Standard mailhog port
+  smtpTLS: false  # Simplified for testing
+  smtpUsername: "test"
+  smtpPassword: "test"
+  existingSmtpSecret: ""
+
+# Basic security settings for testing
+podSecurityContext:
+  fsGroup: 33
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 33
+
+# Test-specific volumes for logging and fixtures
+volumes:
+  - name: test-logs
+    emptyDir: {}
+  - name: test-fixtures
+    configMap:
+      name: passbolt-test-fixtures
+
+volumeMounts:
+  - name: test-logs
+    mountPath: "/var/www/passbolt/logs"
+  - name: test-fixtures
+    mountPath: "/var/www/passbolt/config/test_fixtures"
+    readOnly: true
+
+# Testing node placement
+nodeSelector:
+  environment: test
+
+# Testing tolerations
+tolerations:
+  - key: "environment"
+    operator: "Equal"
+    value: "test"
+    effect: "NoSchedule"
+
+# Basic affinity for testing
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - passbolt-test
+          topologyKey: "kubernetes.io/hostname"
+
+# Network policies for testing security
+networkPolicy:
+  enabled: true
+  name: passbolt-test-networkpolicy
+  databaseEgress:
+    enabled: true
+    port: 3306
+    cidr: "10.0.0.0/16"
+  ldapEgress:
+    enabled: true
+    port: 389
+    cidr: "10.0.0.0/16"
+  smtpEgress:
+    enabled: true
+    port: 1025
+    cidr: "10.0.0.0/16"  # Internal mailhog for testing
+
+# RBAC configuration for test environment
+rbac:
+  create: true
+  name: passbolt-test-rbac
+  binding:
+    name: passbolt-test-binding
+  rules:
+    - apiGroups: [""]
+      resources: ["secrets", "configmaps"]
+      verbs: ["get", "list"]
+
+# Monitoring configuration for test environment
+monitoring:
+  podMonitor:
+    enabled: true
+    interval: 15s
+    scrapeTimeout: 5s
+    path: /healthz
+    port: http
+
+# Test-specific pod annotations for monitoring
+podAnnotations:
+  test.environment: "true"
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/healthz"
+  prometheus.io/port: "80"

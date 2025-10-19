@@ -1,0 +1,75 @@
+{{- if .Values.reports.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kimai.fullname" . }}-reports
+  labels:
+    {{- include "kimai.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.reports.schedule }}"
+  successfulJobsHistoryLimit: {{ .Values.reports.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.reports.failedJobsHistoryLimit }}
+  concurrencyPolicy: {{ .Values.reports.concurrencyPolicy | default "Forbid" }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              {{- if eq .Values.reports.mode "http" }}
+              image: "{{ .Values.reports.image.repository }}:{{ .Values.reports.image.tag }}"
+              imagePullPolicy: {{ .Values.reports.image.pullPolicy }}
+              command: ["sh","-c"]
+              args:
+                - >
+                  {{- $method := default "POST" .Values.reports.http.method -}}
+                  {{- $url := .Values.reports.http.url -}}
+                  curl -sS -X {{ $method }} \
+                  {{- range $h := .Values.reports.http.headers }}
+                    -H "{{ $h.name }}: {{- if $h.valueFromSecret }}$(HEADER_{{ $h.name | replace "-" "_" | upper }}){{ else }}{{ $h.value }}{{ end }}" \
+                  {{- end }}
+                  "{{ $url }}" | tee /dev/stdout
+              env:
+                {{- range $h := .Values.reports.http.headers }}
+                {{- if $h.valueFromSecret }}
+                - name: HEADER_{{ $h.name | replace "-" "_" | upper }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $h.valueFromSecret }}
+                      key: token
+                {{- end }}
+                {{- end }}
+              {{- else }}
+              # CLI mode: run inside Kimai container
+              image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+              imagePullPolicy: {{ $.Values.image.pullPolicy }}
+              workingDir: {{ .Values.reports.cli.workingDir | quote }}
+              command: {{ toJson .Values.reports.cli.command }}
+              args: {{ toJson .Values.reports.cli.args }}
+              volumeMounts:
+                - name: kimai-data
+                  mountPath: /opt/kimai/var
+              envFrom:
+                - secretRef:
+                    name: kimai-secret
+              env:
+                - name: APP_ENV
+                  value: "{{ $.Values.kimai.appEnv }}"
+                {{- if $.Values.mariadb.enabled }}
+                - name: DATABASE_URL
+                  value: >-
+                    mysql://{{ $.Values.mariadb.auth.username }}:{{ $.Values.mariadb.auth.password }}@{{ $.Release.Name }}-mariadb:3306/{{ $.Values.mariadb.auth.database }}
+                {{- else }}
+                - name: DATABASE_URL
+                  value: >-
+                    mysql://{{ $.Values.database.user }}:{{ $.Values.database.password }}@{{ $.Values.database.host }}:{{ $.Values.database.port }}/{{ $.Values.database.name }}
+                {{- end }}
+              {{- end }}
+          {{- if $.Values.persistence.enabled }}
+          volumes:
+            - name: kimai-data
+              persistentVolumeClaim:
+                claimName: {{ default (include "kimai.fullname" .) $.Values.persistence.existingClaim }}
+          {{- end }}
+{{- end }}

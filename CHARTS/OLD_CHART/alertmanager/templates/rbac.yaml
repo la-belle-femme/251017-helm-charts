@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "alertmanager.fullname" . }}
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "alertmanager.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "alertmanager.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  name: {{ include "alertmanager.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io

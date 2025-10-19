@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-to-cadvisor
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app: cadvisor
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
+  policyTypes:
+    - Ingress
+

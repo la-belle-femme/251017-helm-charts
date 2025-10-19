@@ -1,0 +1,55 @@
+replicaCount: 2
+
+image:
+  repository: quay.io/jetstack/cert-manager-controller
+  tag: v1.14.3
+  pullPolicy: IfNotPresent
+
+installCRDs: true
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+webhook:
+  enabled: false
+  # timeoutSeconds: 5
+
+
+cainjector:
+  enabled: true
+
+startupapicheck:
+  enabled: true
+
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+
+
+
+
+
+
+
+
+

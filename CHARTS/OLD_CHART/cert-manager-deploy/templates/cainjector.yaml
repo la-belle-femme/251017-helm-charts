@@ -1,0 +1,25 @@
+{{- if .Values.cainjector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cert-manager.name" . }}-cainjector
+  labels:
+    app: {{ include "cert-manager.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "cert-manager.name" . }}-cainjector
+  template:
+    metadata:
+      labels:
+        app: {{ include "cert-manager.name" . }}-cainjector
+    spec:
+      serviceAccountName: cert-manager
+      containers:
+        - name: cainjector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{ toYaml .Values.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,29 @@
+apiVersion: v2
+name: kyverno
+description: A Helm chart for deploying Kyverno, a Kubernetes-native policy engine
+
+type: application
+version: 1.0.0           # Your Helm chart version
+appVersion: "v1.11.2"    # Kyverno app version (matches image tag)
+
+home: https://kyverno.io
+sources:
+  - https://github.com/kyverno/kyverno
+maintainers:
+  - name: Your Name
+    email: your.email@example.com
+
+keywords:
+  - kyverno
+  - policy
+  - kubernetes
+  - admission-controller
+  - validation
+  - security
+
+annotations:
+  artifacthub.io/maintainers: |
+    - name: Your Name
+      email: your.email@example.com
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/category: security

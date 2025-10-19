@@ -1,0 +1,22 @@
+#
+# PrometheusRule definitions.  This template reads the
+# `kube-prometheus-stack.additionalPrometheusRulesMap` value and renders a
+# PrometheusRule resource for each entry.  Keys containing hyphens are
+# accessed via the `index` function because dot notation cannot handle
+# hyphenated keys.
+
+{{- $rules := index .Values "kube-prometheus-stack" "additionalPrometheusRulesMap" }}
+{{- if $rules }}
+{{- range $name, $group := $rules }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ printf "%s-%s" $name (include "prom-stack.fullname" $) }}
+  labels:
+    {{- include "prom-stack.labels" $ | nindent 4 }}
+spec:
+  groups:
+    {{- toYaml $group.groups | nindent 4 }}
+---
+{{- end }}
+{{- end }}

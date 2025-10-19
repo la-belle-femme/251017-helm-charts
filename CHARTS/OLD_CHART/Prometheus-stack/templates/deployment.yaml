@@ -1,0 +1,33 @@
+{{- /*
+  The prom-stack wrapper chart does not define its own Deployment.  All
+  workloads (Prometheus, Alertmanager, Grafana, Node Exporter, kube-state-metrics)
+  are deployed by the kube-prometheus-stack sub-chart.  This placeholder is
+  provided to satisfy common chart structure and can be extended if you wish
+  to add additional components alongside the monitoring stack.
+*/ -}}
+
+{{- if false }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "prom-stack.fullname" . }}
+  labels:
+    {{- include "prom-stack.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "prom-stack.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "prom-stack.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "prom-stack.fullname" . }}
+      containers:
+        - name: placeholder
+          image: "nginx:1.25.1"
+          ports:
+            - name: http
+              containerPort: 80
+{{- end }}

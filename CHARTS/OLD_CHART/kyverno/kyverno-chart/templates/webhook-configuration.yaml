@@ -1,0 +1,50 @@
+{{- $admission := .Values.admissionController }}
+{{- if and (kindIs "map" $admission) (hasKey $admission "enabled") (eq $admission.enabled true) }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: kyverno-mutating-webhook-cfg
+  labels:
+    app.kubernetes.io/name: kyverno
+    app.kubernetes.io/instance: kyverno
+webhooks:
+  - name: validate.kyverno.svc
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    timeoutSeconds: {{ $admission.timeoutSeconds | default 10 }}
+    clientConfig:
+      service:
+        name: kyverno
+        namespace: {{ .Values.global.namespace | default "kyverno" }}
+        path: "/mutate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["*"]
+        resources: ["*"]
+    failurePolicy: Ignore
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: kyverno-validating-webhook-cfg
+  labels:
+    app.kubernetes.io/name: kyverno
+    app.kubernetes.io/instance: kyverno
+webhooks:
+  - name: policy.kyverno.svc
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    timeoutSeconds: {{ $admission.timeoutSeconds | default 10 }}
+    clientConfig:
+      service:
+        name: kyverno
+        namespace: {{ .Values.global.namespace | default "kyverno" }}
+        path: "/validate"
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: ["*"]
+        apiVersions: ["*"]
+        resources: ["*"]
+    failurePolicy: {{ $admission.validation.failurePolicy | default "Ignore" }}
+{{- end }}
